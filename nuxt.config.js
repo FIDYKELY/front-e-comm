@@ -7,6 +7,9 @@ module.exports = {
   router: {
     base: "/Vuemmerce/"
   },
+  http: {
+    baseURL: 'http://localhost:8000/api/products/', // Base URL pour les appels API
+  },
 
   /*
    ** Headers of the page
@@ -144,12 +147,14 @@ module.exports = {
   modules: [
     '@nuxt/postcss8',
     'nuxt-purgecss',
+    '@nuxtjs/proxy',
+    '@nuxt/http',
   ],
   /*
    ** Axios module configuration
    */
   axios: {
-    // See https://github.com/nuxt-community/axios-module#options
+    baseURL: 'http://localhost:3000'
   },
 
   generate: {
@@ -159,6 +164,13 @@ module.exports = {
   purgeCSS: {
     mode: 'postcss',
     enabled: (process.env.NODE_ENV === 'production')
+  },
+  proxy: {
+    '/api/': {
+      target: 'http://localhost:3000',
+      pathRewrite: { '^/api/': '/api/' },
+      changeOrigin: true,
+    },
   },
 
   build: {
