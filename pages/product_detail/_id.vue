@@ -3,7 +3,9 @@
 </template>
 
 <script>
-import Product from '@/components/Products.vue'
+import Product from '@/components/Products.vue';
+import productService from '~/api/products';
+
 export default {
   name: 'product_detail-id',
 
@@ -23,14 +25,28 @@ export default {
     };
   },
 
-  mounted () {
-    this.product = this.$store.getters.getProductById(this.$route.params.id);
-    this.selected = this.product.quantity;
+  mounted() {
+  let productId = this.$route.params.id;
+  this.product = this.$store.getters.getProductById(productId);
 
-    for (let i = 1; i <= 20; i++) {
-      this.quantityArray.push(i);
-    }
-  },
+  if (!this.product) {
+    // Fetch product details from the API if not in store
+    productService.getProductById(productId).then(response => {
+      this.product = response.data;
+    }).catch(error => {
+      console.error('Erreur lors de la récupération des détails du produit :', error);
+    });
+  }
+
+  // Initialiser la quantité sélectionnée
+  this.selected = this.product ? this.product.quantity : 1;
+
+  // Créer le tableau des quantités disponibles
+  for (let i = 1; i <= 20; i++) {
+    this.quantityArray.push(i);
+  }
+}
+,
 
   computed: {
     isAddedBtn () {

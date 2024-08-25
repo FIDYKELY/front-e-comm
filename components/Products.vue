@@ -75,7 +75,7 @@
               <p class="ml-2 text-lg">{{ product.reviews > 0 ? `${product.reviews} Reviews` : 'No reviews' }}</p>
             </div>
             <p class="text-3xl font-medium">
-              <strong>&euro; {{ product.price }}</strong>
+              <strong>{{ product.price }} Ar</strong>
             </p>
           </div>
           <div class="flex justify-between mt-5 items-center">

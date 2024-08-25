@@ -82,5 +82,14 @@ export const mutations = {
   },
   SET_USER(state, authUser) {
     state.userInfo = authUser;
+  },
+  showLoginModal(state, payload) {
+    state.systemInfo.openLoginModal = payload;
+  },
+  showSignupModal(state, payload) {
+    state.systemInfo.openSignupModal = payload;
+  },
+  showCheckoutModal(state, payload) {
+    state.systemInfo.openCheckoutModal = payload;
   }
 };
