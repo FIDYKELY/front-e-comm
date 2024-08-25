@@ -15,9 +15,8 @@ export const state = () => ({
     // ... autres produits
   ],
   userInfo: {
-    isLoggedIn: false,
-    isSignedUp: false,
-    name: '',
+    isLoggedIn: false, // Default value
+    name: '' // Default value
   },
   systemInfo: {
     openLoginModal: false,
@@ -91,5 +90,21 @@ export const mutations = {
   },
   showCheckoutModal(state, payload) {
     state.systemInfo.openCheckoutModal = payload;
+  }
+};
+
+// Actions to handle side-effects or async logic
+export const actions = {
+  nuxtServerInit({ commit }) {
+    // Only run on client-side (browser)
+    if (process.client) {
+      const authToken = localStorage.getItem('authToken');
+      const userName = localStorage.getItem('userName');
+
+      commit('SET_USER', {
+        isLoggedIn: !!authToken,
+        name: userName || ''
+      });
+    }
   }
 };

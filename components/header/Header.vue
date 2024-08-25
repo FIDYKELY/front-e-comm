@@ -36,11 +36,11 @@
           </button>
         </div>
         <div v-if="showDropdown && !isUserLoggedIn" class="dropdown">
-          <button v-if="!isUserLoggedIn" class="button" @click="showLoginModal">
+          <button class="button" @click="showLoginModal">
             <span class="text-lg">Already registered?<br /> {{ loginLabel }}</span>
             <i class="fa fa-sign-in"></i>
           </button>
-          <button v-if="!isUserLoggedIn" class="button" @click="showSignupModal">
+          <button class="button" @click="showSignupModal">
             <span class="text-lg">New User?<br /> {{ signupLabel }}</span>
             <i class="fa fa-user-plus"></i>
           </button>
@@ -51,73 +51,71 @@
 </template>
 
 <script>
-  export default {
-    name: 'VmHeader',
+export default {
+  name: 'VmHeader',
 
-    data () {
-      return {
-        isCheckoutActive: false,
-        showDropdown: false,
-        logoutLabel: 'Log out',
-			  loginLabel: 'Log in',
-			  signupLabel: 'Sign up',
-        wishlistLabel: 'Wishlist',
-      }
+  data() {
+    return {
+      showDropdown: false,
+      logoutLabel: 'Log out',
+      loginLabel: 'Log in',
+      signupLabel: 'Sign up',
+      wishlistLabel: 'Wishlist',
+    };
+  },
+
+  computed: {
+    numProductsAdded() {
+      return this.$store.getters.productsAdded.length;
     },
-
-    computed: {
-      numProductsAdded () {
-        return this.$store.getters.productsAdded.length;
-      },
-      isUserLoggedIn () {
-        return this.$store.getters.isUserLoggedIn;
-      },
-      getUserName () {
-        let name = this.$store.getters.getUserName;
-
-        if (name === '') {
-          return 'user';
-        } else {
-          return name;
-        }
-      }
+    isUserLoggedIn() {
+      return this.$store.getters.isUserLoggedIn;
     },
+    getUserName() {
+      let name = this.$store.getters.getUserName;
 
-    mounted() {
-      window.addEventListener("blur", this.closeDropdown, true);
-    },
-    destroyed() {
-      window.removeEventListener("blur", this.closeDropdown);
-    },
-
-    methods: {
-      closeDropdown() {
-        setTimeout(() => {
-          this.showDropdown = false;
-        }, 100);
-      },
-      showCheckoutModal () {
-        this.$store.commit('showCheckoutModal', true);
-      },
-      showLoginModal () {
-        this.$store.commit('showLoginModal', true);
-      },
-      showSignupModal () {
-        this.$store.commit('showSignupModal', true);
-      },
-      onShowDropdown () {
-        this.showDropdown = !this.showDropdown
-      },
-      logout () {
-        this.$store.commit('isUserLoggedIn', false);
-        this.$store.commit('isUserSignedUp', false);
-        this.$store.commit('removeProductsFromFavourite');
-
-        // redirect to homepage
-        this.$router.push({ name: 'index' });
-      },
+      return name || 'user';
     }
-  };
+  },
+
+  mounted() {
+    window.addEventListener("blur", this.closeDropdown, true);
+  },
+  destroyed() {
+    window.removeEventListener("blur", this.closeDropdown);
+  },
+
+  methods: {
+    closeDropdown() {
+      setTimeout(() => {
+        this.showDropdown = false;
+      }, 100);
+    },
+    showCheckoutModal() {
+      this.$store.commit('showCheckoutModal', true);
+    },
+    showLoginModal() {
+      this.$store.commit('showLoginModal', true);
+    },
+    showSignupModal() {
+      this.$store.commit('showSignupModal', true);
+    },
+    onShowDropdown() {
+      this.showDropdown = !this.showDropdown;
+    },
+    logout() {
+      this.$store.commit('SET_USER', {
+        isLoggedIn: false,
+        name: '',
+      });
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userName');
+
+      // redirect to homepage
+      this.$router.push({ name: 'index' });
+    },
+  }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -138,7 +136,6 @@
     @apply border-2;
     @apply border-grey_light;
   }
-
   .button {
     @apply w-full;
     @apply hover:bg-grey_light;

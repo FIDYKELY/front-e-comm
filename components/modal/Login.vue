@@ -39,7 +39,7 @@
           </div>
           <div class="m-4">
             <button v-if="!isUserLoggedIn" type="submit" class="rounded-xl p-3 bg-blue text-white w-full">{{ loginBtnLabel }}</button>
-            <button v-if="isUserLoggedIn" type="button" class="rounded-xl p-3 bg-grey_light text-grey_dark" @click="closeModal">{{ btnLoggedInLabel }}</button>
+            <button v-if="isUserLoggedIn" type="button" class="rounded-xl p-3 bg-grey_light text-grey_dark" @click="logout">{{ btnLoggedInLabel }}</button>
           </div>
         </section>
       </form>
@@ -48,11 +48,11 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/store/auth-store';
 import { isValidEmail } from '@/assets/validators';
+import authApi from '@/api/auth';
 
 export default {
-  name: 'login',
+  name: 'Login',
 
   data() {
     return {
@@ -72,16 +72,14 @@ export default {
 
   computed: {
     isUserLoggedIn() {
-      return this.authStore.isLoggedIn;
+      if (process.client) {
+        return !!localStorage.getItem('authToken');
+      }
+      return false;
     },
     openModal() {
       return this.$store.getters.isLoginModalOpen;
     }
-  },
-
-  setup() {
-    const authStore = useAuthStore();
-    return { authStore };
   },
 
   methods: {
@@ -116,10 +114,19 @@ export default {
       }
 
       try {
-        // Attempt login using Pinia store action
-        const isAuthenticated = await this.authStore.login(this.email, this.password);
+        // Attempt login using authApi function
+        const response = await authApi.login(this.email, this.password);
+        const { token } = response.data; // Get the token from the response
 
-        if (isAuthenticated) {
+        if (token) {
+          if (process.client) {
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('userName', this.email.split('@')[0]);
+          }
+          this.$store.commit('SET_USER', {
+            isLoggedIn: true,
+            name: this.email.split('@')[0],
+          });
           this.$router.push('/dashboard'); // Redirect to dashboard or another page
           this.closeModal();
         } else {
@@ -150,10 +157,35 @@ export default {
       } else {
         this.highlightPasswordWithError = true;
       }
+    },
+
+    logout() {
+      if (process.client) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userName');
+      }
+      this.$store.commit('SET_USER', {
+        isLoggedIn: false,
+        name: ''
+      });
+      this.$router.push('/'); // Redirect to homepage or another page
+    }
+  },
+
+  mounted() {
+    if (process.client) {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        this.$store.commit('SET_USER', {
+          isLoggedIn: true,
+          name: localStorage.getItem('userName') || '',
+        });
+      }
     }
   }
 };
 </script>
+
 
 <style lang="scss">
   .fa-exclamation-circle {

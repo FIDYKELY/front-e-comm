@@ -154,7 +154,7 @@ module.exports = {
    ** Axios module configuration
    */
   axios: {
-    baseURL: 'http://localhost:3000'
+    baseURL: 'http://localhost:8000'
   },
 
   generate: {
@@ -167,7 +167,7 @@ module.exports = {
   },
   proxy: {
     '/api/': {
-      target: 'http://localhost:3000',
+      target: 'http://localhost:8000',
       pathRewrite: { '^/api/': '/api/' },
       changeOrigin: true,
     },
