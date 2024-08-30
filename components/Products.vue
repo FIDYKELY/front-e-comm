@@ -20,10 +20,11 @@
             }
           }"
         >
-          <img
+        <img
+            v-if="product.image_url"
+            :src="getImageUrl(product.image_url)"
+            alt="Image du produit"
             class="rounded-2xl"
-            src="https://bulma.io/images/placeholders/1280x960.png"
-            alt="Placeholder image"
           />
         </nuxt-link>
       </div>
@@ -160,6 +161,12 @@ export default {
       };
       this.$store.commit('quantity', data);
     },
+    getImageUrl(imageUrl) {
+  const url = `http://localhost:8000/${imageUrl}`;
+  console.log('URL de l\'image générée :', url);  // Vérifie l'URL générée
+  return url;
+}
+
   },
 };
 </script>
