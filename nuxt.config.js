@@ -123,7 +123,7 @@ module.exports = {
         crossorigin: "anonymous",
         href: "https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
       },
-      { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' },
+      { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' }
     ]
   },
 

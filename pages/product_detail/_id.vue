@@ -60,20 +60,34 @@
           <p class="text-lg font-medium">Rate this product:</p>
 
           <div class="rating-stars flex">
-  <i
-    v-for="star in 5"
-    :key="star"
-    class="fa"
-    :class="star <= currentRating ? 'fa-star text-gold' : 'fa-star-o text-gray-400'"
-    @click="rateProduct(star)"
-  ></i>
-</div>
+            <i
+              v-for="star in 5"
+              :key="star"
+              class="fa"
+              :class="star <= currentRating ? 'fa-star text-gold' : 'fa-star-o text-gray-400'"
+              @click="rateProduct(star)"
+            ></i>
+          </div>
 
           <p class="mt-2">Current rating: {{ currentRating }}</p>
         </div>
       </div>
     </div>
+    <div class="comments-section mt-4">
+      <h3>Commentaires</h3>
+      <div v-for="comment in comments" :key="comment.id" class="comment">
+        <p>{{ comment.comment }}</p>
+        <small>Posté par Utilisateur {{ comment.user_id }} le {{ new Date(comment.createdAt).toLocaleString() }}</small>
+      </div>
+      <form @submit.prevent="submitComment">
+        <textarea v-model="newComment" placeholder="Écrire un commentaire..." required></textarea>
+        <button type="submit">Poster un commentaire</button>
+        <p v-if="errorMessage" class="text-red-500">{{ errorMessage }}</p>
+      </form>
+
+    </div>
   </div>
+
 </template>
 
 <script>
@@ -90,23 +104,39 @@ export default {
       removeFromFavouriteLabel: 'Remove from favourite',
       selected: 1,
       quantityArray: [],
-      currentRating: 3,
+      currentRating: 0,
+      comments: [],
+      newComment: '',
+      errorMessage: '',
     };
   },
+    async asyncData({ params, $axios }) {
+      try {
+        const response = await $axios.get(`/products/${params.id}`);
+        return { product: response.data };
+      } catch (error) {
+        console.error('Error fetching product details:', error);
+        return { product: null };
+      }
+    },
   async created() {
-    const productId = this.$route.params.id;
-    try {
-      const response = await productService.getProductById(productId);
-      this.product = response.data;
-      this.currentRating = this.product.ratings || 0;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des détails du produit :', error);
-    }
+      const productId = this.$route.params.id;
+      try {
+        const response = await productService.getProductById(productId);
+        this.product = response.data;
+        this.currentRating = this.product.ratings || 0;
 
-    // Créer la liste des quantités disponibles
-    for (let i = 1; i <= 20; i++) {
-      this.quantityArray.push(i);
-    }
+        // Charger les commentaires du produit
+        const commentsResponse = await productService.getProductComments(productId);
+        this.comments = commentsResponse.data; // Stocker les commentaires récupérés
+      } catch (error) {
+        console.error('Erreur lors de la récupération des détails du produit ou des commentaires:', error);
+      }
+
+      // Créer la liste des quantités disponibles
+      for (let i = 1; i <= 20; i++) {
+        this.quantityArray.push(i);
+      }
   },
   methods: {
     addToCart(id) {
@@ -152,7 +182,28 @@ export default {
 },
     getImageUrl(imageUrl) {
       return `http://localhost:8000/${imageUrl}`;
-    }
+    },
+    async submitComment() {
+  const productId = this.$route.params.id;
+  const token = localStorage.getItem('authToken');
+
+  if (!token) {
+    this.errorMessage = "Vous devez être connecté pour commenter.";
+    return;
+  }
+
+  try {
+    const response = await productService.createProductComment(productId, {
+      comment: this.newComment,
+    });
+    this.comments.push(response.data);
+    this.newComment = '';
+    this.errorMessage = ''; // Réinitialiser le message d'erreur
+  } catch (error) {
+    this.errorMessage = "Erreur lors de l’ajout du commentaire. Veuillez réessayer.";
+    console.error('Erreur lors de l’ajout du commentaire:', error);
+  }
+},
   },
 };
 </script>

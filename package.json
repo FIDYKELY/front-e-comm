@@ -30,6 +30,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@nuxt/http": "^0.6.4",
     "@nuxt/server": "^2.18.1",
+    "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/fontawesome": "^1.1.2",
     "@nuxtjs/proxy": "^2.1.0",
     "axios": "^1.7.4",

@@ -1,56 +1,57 @@
-// ~/api/products.js
-let axios;
-let apiClient;
+import { initializeApiClient } from '~/api/client.js';
 
-// Fonction pour initialiser apiClient
-const initializeApiClient = async () => {
-  if (!apiClient) {
-    axios = (await import('axios')).default;
-    apiClient = axios.create({
-      baseURL: 'http://localhost:8000/api/products', // Assurez-vous que cette URL correspond à votre backend Express
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-  }
+const baseURL = 'http://localhost:8000/api/products';
+
+// Fonction pour obtenir le client API avec le token si nécessaire
+const getApiClient = async (token = null) => {
+  return await initializeApiClient(baseURL, token);
 };
 
-// Utilisation de apiClient après son initialisation
 const getAllProducts = async () => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.get('/');
 };
 
 const getProductById = async (id) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.get(`/${id}`);
 };
 
 const createProduct = async (product) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.post('/', product);
 };
 
 const updateProduct = async (id, product) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.put(`/${id}`, product);
 };
 
 const deleteProduct = async (id) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.delete(`/${id}`);
 };
 
 const searchProducts = async (query) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.get(`/search`, { params: { q: query } });
 };
+
 const updateProductRating = async (id, rating) => {
-  await initializeApiClient();
+  const apiClient = await getApiClient();
   return apiClient.put(`/${id}/rating`, { rating });
 };
 
+const getProductComments = async (id) => {
+  const apiClient = await getApiClient();
+  return apiClient.get(`/${id}/comments`);
+};
 
+const createProductComment = async (id, comment) => {
+  const token = localStorage.getItem('authToken');
+  const apiClient = await getApiClient(token);
+  return apiClient.post(`/${id}/comments`, comment);
+};
 
 export default {
   getAllProducts,
@@ -60,4 +61,6 @@ export default {
   deleteProduct,
   searchProducts,
   updateProductRating,
+  getProductComments,
+  createProductComment,
 };
