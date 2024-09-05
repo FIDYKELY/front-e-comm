@@ -45,6 +45,12 @@ const searchProducts = async (query) => {
   await initializeApiClient();
   return apiClient.get(`/search`, { params: { q: query } });
 };
+const updateProductRating = async (id, rating) => {
+  await initializeApiClient();
+  return apiClient.put(`/${id}/rating`, { rating });
+};
+
+
 
 export default {
   getAllProducts,
@@ -53,4 +59,5 @@ export default {
   updateProduct,
   deleteProduct,
   searchProducts,
+  updateProductRating,
 };

@@ -127,7 +127,7 @@ export default {
             isLoggedIn: true,
             name: this.email.split('@')[0],
           });
-          this.$router.push('/dashboard'); // Redirect to dashboard or another page
+          this.$router.push('/'); // Redirect to dashboard or another page
           this.closeModal();
         } else {
           this.highlightPasswordWithError = true;

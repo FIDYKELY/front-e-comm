@@ -122,7 +122,8 @@ module.exports = {
           "sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p",
         crossorigin: "anonymous",
         href: "https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
-      }
+      },
+      { rel: 'stylesheet', href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' },
     ]
   },
 
@@ -139,7 +140,9 @@ module.exports = {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [],
+  plugins: [
+    '~/plugins/fontawesome.js',
+  ],
 
   /*
    ** Nuxt.js modules
@@ -149,7 +152,15 @@ module.exports = {
     'nuxt-purgecss',
     '@nuxtjs/proxy',
     '@nuxt/http',
+    '@nuxtjs/fontawesome',
   ],
+
+  fontawesome: {
+    icons: {
+      solid: ['faStar', 'faStarHalfAlt', 'faStarOfDavid'], // Ajoute ici les icônes que tu souhaites utiliser
+      brands: ['faGithub', 'faTwitter'] // Optionnel, pour les icônes de marque
+    }
+  },
   /*
    ** Axios module configuration
    */
