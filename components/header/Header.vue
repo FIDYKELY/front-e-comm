@@ -66,7 +66,9 @@ export default {
 
   computed: {
     numProductsAdded() {
-      return this.$store.getters.productsAdded.length;
+      const count = this.$store.getters.productsAdded.length;
+      console.log('Number of products in cart:', count); // Debug log
+      return count;
     },
     isUserLoggedIn() {
       return this.$store.getters.isUserLoggedIn;

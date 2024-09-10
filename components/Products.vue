@@ -66,6 +66,7 @@
             <button class="rounded-xl p-3 bg-blue text-white" v-if="!product.isAddedToCart" @click="addToCart(product.id)">
               {{ addToCartLabel }}
             </button>
+
             <button class="rounded-xl p-3" v-if="product.isAddedToCart" @click="removeFromCart(product.id)">
               {{ removeFromCartLabel }}
             </button>
@@ -106,22 +107,30 @@ export default {
     }
   },
   methods: {
-    addToCart(id) {
-      let data = {
-        id: id,
-        status: true,
+    addToCart(productId) {
+    console.log('Add to cart clicked for product ID:', productId); // Log product ID
+    const product = this.products.find(p => p.id === productId);
+    console.log('Product found:', product); // Log product details
+    if (product) {
+      const cartItem = {
+        id: product.id,
+        name: product.product_name,
+        price: product.price,
+        quantity: this.selected, // Utiliser la quantité sélectionnée
+        image_url: product.image_url
       };
-      this.$store.commit('addToCart', id);
-      this.$store.commit('setAddedBtn', data);
-    },
-    removeFromCart(id) {
-      let data = {
-        id: id,
-        status: false,
-      };
-      this.$store.commit('removeFromCart', id);
-      this.$store.commit('setAddedBtn', data);
-    },
+      console.log('Cart item:', cartItem); // Log cart item
+      // Commiter l'ajout au panier
+      this.$store.commit('addToCart', cartItem);
+      product.isAddedToCart = true; // Mettre à jour le statut
+    } else {
+      console.error('Product not found'); // Log error if product is not found
+    }
+  },
+  removeFromCart(productId) {
+    this.$store.commit('removeFromCart', productId);
+    this.$store.commit('setAddedBtn', { id: productId, status: false });
+  },
     saveToFavorite(id) {
       if (this.$store.state.userInfo.isLoggedIn) {
         this.$store.commit('addToFavourite', id);

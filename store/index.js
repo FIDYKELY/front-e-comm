@@ -14,6 +14,7 @@ export const state = () => ({
     },
     // ... autres produits
   ],
+  cart: [],
   userInfo: {
     isLoggedIn: false, // Default value
     name: '' // Default value
@@ -26,8 +27,12 @@ export const state = () => ({
 });
 
 export const getters = {
-  productsAdded: state => state.products.filter(el => el.isAddedToCart),
+  productsAdded(state) {
+    return state.cart;
+  },
   productsAddedToFavourite: state => state.products.filter(el => el.isFavourite),
+  cartItems: state => state.cart, // Récupère tous les articles dans le panier
+  cartItemCount: state => state.cart.length, // Nombre d'articles dans le panier
   getProductById: state => id => state.products.find(product => product.id == id),
   isUserLoggedIn: state => state.userInfo.isLoggedIn,
   getUserName: state => state.userInfo.name,
@@ -37,27 +42,23 @@ export const getters = {
 };
 
 export const mutations = {
-  addToCart: (state, id) => {
-    state.products.forEach(el => {
-      if (id === el.id) {
-        el.isAddedToCart = true;
-      }
-    });
+  addToCart(state, product) {
+    const existingProduct = state.cart.find(item => item.id === product.id);
+    if (existingProduct) {
+      existingProduct.quantity += product.quantity;
+    } else {
+      state.cart.push({ ...product });
+    }
   },
-  setAddedBtn: (state, data) => {
-    state.products.forEach(el => {
-      if (data.id === el.id) {
-        el.isAddedBtn = data.status;
-      }
-    });
+  removeFromCart(state, productId) {
+    state.cart = state.cart.filter(item => item.id !== productId);
   },
-  removeFromCart: (state, id) => {
-    state.products.forEach(el => {
-      if (id === el.id) {
-        el.isAddedToCart = false;
-      }
-    });
+  setAddedBtn(state, { id, status }) {
+    state.addedButtons = { ...state.addedButtons, [id]: status };
   },
+  // removeFromCart(state, productId) {
+  //   state.cart = state.cart.filter((item) => item.id !== productId);
+  // },
   addToFavourite: (state, id) => {
     state.products.forEach(el => {
       if (id === el.id) {
@@ -72,12 +73,11 @@ export const mutations = {
       }
     });
   },
-  quantity: (state, data) => {
-    state.products.forEach(el => {
-      if (data.id === el.id) {
-        el.quantity = data.quantity;
-      }
-    });
+  quantity(state, { id, quantity }) {
+    const cartItem = state.cart.find((item) => item.id === id);
+    if (cartItem) {
+      cartItem.quantity = quantity;
+    }
   },
   SET_USER(state, authUser) {
     state.userInfo = authUser;
@@ -95,6 +95,9 @@ export const mutations = {
 
 // Actions to handle side-effects or async logic
 export const actions = {
+  addProductToCart({ commit }, product) {
+    commit('addToCart', product);
+  },
   nuxtServerInit({ commit }) {
     // Only run on client-side (browser)
     if (process.client) {

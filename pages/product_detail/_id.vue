@@ -139,22 +139,21 @@ export default {
       }
   },
   methods: {
-    addToCart(id) {
-      let data = {
-        id: id,
-        status: true,
-      };
-      this.$store.commit('addToCart', id);
-      this.$store.commit('setAddedBtn', data);
-    },
-    removeFromCart(id) {
-      let data = {
-        id: id,
-        status: false,
-      };
-      this.$store.commit('removeFromCart', id);
-      this.$store.commit('setAddedBtn', data);
-    },
+    addToCart(productId) {
+    const cartItem = {
+      id: this.product.id,
+      name: this.product.product_name,
+      price: this.product.price,
+      quantity: this.selected, // Utiliser la quantité sélectionnée
+      image_url: this.product.image_url
+    };
+    this.$store.commit('addToCart', cartItem);
+    this.$store.commit('setAddedBtn', { id: productId, status: true });
+  },
+  removeFromCart(productId) {
+    this.$store.commit('removeFromCart', productId);
+    this.$store.commit('setAddedBtn', { id: productId, status: false });
+  },
     saveToFavorite(id) {
       if (this.$store.state.userInfo.isLoggedIn) {
         this.$store.commit('addToFavourite', id);
