@@ -88,8 +88,19 @@ export const mutations = {
   showSignupModal(state, payload) {
     state.systemInfo.openSignupModal = payload;
   },
-  showCheckoutModal(state, payload) {
-    state.systemInfo.openCheckoutModal = payload;
+    showCheckoutModal(state, payload) {
+      state.systemInfo.openCheckoutModal = payload;
+      // Remettre à faux le succès de paiement si le modal est fermé
+      if (!payload) {
+        state.isPaymentSuccessful = false;
+      }
+    },
+    resetCart(state) {
+      state.cart = []; // Vide la liste des produits dans le panier
+    }
+  ,
+  resetCart(state) {
+    state.cart = []; // Vide la liste des produits dans le panier
   }
 };
 
