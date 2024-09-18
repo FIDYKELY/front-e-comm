@@ -61,93 +61,111 @@
     </div>
   </template>
 
-  <script>
-  import { loadStripe } from '@stripe/stripe-js';
-  import paymentApi from '~/api/payment.js';
+<script>
+import { loadStripe } from '@stripe/stripe-js';
+import paymentApi from '~/api/payment.js';
 
-  export default {
-    name: 'checkout',
-    data() {
-      return {
-        modalTitle: 'Checkout',
-        removeLabel: 'Remove from cart',
-        cartEmptyLabel: 'Your cart is empty',
-        isCheckoutSection: false,
-        stripe: null,
-        cardElement: null,
-        error: null,
-        successMessage: null,
-        paymentLoading: false,
-        isPaymentSuccessful: false,
-      };
+export default {
+  name: 'checkout',
+  data() {
+    return {
+      modalTitle: 'Checkout',
+      removeLabel: 'Remove from cart',
+      cartEmptyLabel: 'Your cart is empty',
+      isCheckoutSection: false,
+      stripe: null,
+      cardElement: null,
+      error: null,
+      successMessage: null,
+      paymentLoading: false,
+      isPaymentSuccessful: false,
+    };
+  },
+  computed: {
+    products() {
+      return this.$store.getters.productsAdded;
     },
-    computed: {
-      products() {
-        return this.$store.getters.productsAdded;
-      },
-      openModal() {
-        return this.$store.getters.isCheckoutModalOpen;
-      },
-      buyLabel() {
-        let totalProducts = this.products.length;
-        let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
-        let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
-        return `Buy ${totalProducts} product${totalProducts > 1 ? 's' : ''} at ${finalPrice}€`;
-      },
-      isUserLoggedIn() {
-        return this.$store.getters.isUserLoggedIn;
+    openModal() {
+      return this.$store.getters.isCheckoutModalOpen;
+    },
+    buyLabel() {
+      let totalProducts = this.products.length;
+      let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
+      let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
+      return `Buy ${totalProducts} product${totalProducts > 1 ? 's' : ''} at ${finalPrice}€`;
+    },
+    isUserLoggedIn() {
+      return this.$store.getters.isUserLoggedIn;
+    }
+  },
+  methods: {
+    closeModal(reloadPage) {
+      this.$store.commit('showCheckoutModal', false);
+      if (reloadPage) {
+        window.location.reload();
+      } else if (this.isPaymentSuccessful) {
+        this.clearCart(); // Vider le panier si le paiement est réussi
+        this.resetCheckout(); // Réinitialiser le checkout
       }
     },
-    methods: {
-      closeModal(reloadPage) {
+    clearCart() {
+      this.$store.commit('clearCart'); // Mutation Vuex pour vider le panier
+    },
+    resetCheckout() {
+      // Réinitialiser toutes les variables du checkout
+      this.isCheckoutSection = false;
+      this.successMessage = null;
+      this.isPaymentSuccessful = false;
+      this.error = null;
+      if (this.cardElement) {
+        this.cardElement.clear(); // Réinitialiser les éléments de paiement
+      }
+    },
+    removeFromCart(id) {
+      this.$store.commit('removeFromCart', id);
+    },
+    async onNextBtn() {
+      if (this.isUserLoggedIn) {
+        this.isCheckoutSection = true;
+        await this.initializeStripe(); // Attendre que Stripe soit initialisé
+      } else {
         this.$store.commit('showCheckoutModal', false);
-        if (reloadPage) {
-          window.location.reload();
-        }
-      },
-      removeFromCart(id) {
-        this.$store.commit('removeFromCart', id);
-      },
-      async onNextBtn() {
-        if (this.isUserLoggedIn) {
-          this.isCheckoutSection = true;
-          await this.initializeStripe(); // Attendre que Stripe soit initialisé
-        } else {
-          this.$store.commit('showCheckoutModal', false);
-          this.$store.commit('showLoginModal', true);
-        }
-      },
-      async initializeStripe() {
-        this.stripe = await loadStripe('pk_test_51NzK6iARIo3qbRy8csc4mnZYnZ8apnF5HP3UyIJOcAXKScUeP5qSQcTuvZ3vYE2FKxrVnQE9zqsZo9SsvpIVQqB700LAwbcyQb');
-        const elements = this.stripe.elements();
-        this.cardElement = elements.create('card');
-        this.cardElement.mount('#card-element');
-      },
-      async processPayment() {
-        try {
-          const amount = this.calculateTotalAmount();
-          const response = await paymentApi.createPaymentIntent(amount);
-          this.showPaymentSummary(response.data);
-          this.isPaymentSuccessful = true;
-        } catch (error) {
-          console.error('Erreur lors de la création de l\'intention de paiement:', error);
-        }
-      },
-      calculateTotalAmount() {
-        let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
-        let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
-        return finalPrice * 100; // Stripe attend les montants en centimes
-      },
-      showPaymentSummary(paymentIntent) {
-        this.successMessage = {
-          id: paymentIntent.id,
-          amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
-          paymentMethod: paymentIntent.payment_method,
-        };
-      },
-    }
-  };
-  </script>
+        this.$store.commit('showLoginModal', true);
+      }
+    },
+    async initializeStripe() {
+      this.stripe = await loadStripe('pk_test_51NzK6iARIo3qbRy8csc4mnZYnZ8apnF5HP3UyIJOcAXKScUeP5qSQcTuvZ3vYE2FKxrVnQE9zqsZo9SsvpIVQqB700LAwbcyQb');
+      const elements = this.stripe.elements();
+      this.cardElement = elements.create('card');
+      this.cardElement.mount('#card-element');
+    },
+    async processPayment() {
+      try {
+        const amount = this.calculateTotalAmount();
+        const response = await paymentApi.createPaymentIntent(amount);
+        this.showPaymentSummary(response.data);
+        this.isPaymentSuccessful = true;
+      } catch (error) {
+        console.error('Erreur lors de la création de l\'intention de paiement:', error);
+      }
+    },
+    calculateTotalAmount() {
+      let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
+      let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
+      return finalPrice * 100; // Stripe attend les montants en centimes
+    },
+    showPaymentSummary(paymentIntent) {
+      this.successMessage = {
+        id: paymentIntent.id,
+        amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
+        paymentMethod: paymentIntent.payment_method,
+      };
+    },
+  }
+};
+</script>
+
+
 
   <style scoped>
     .box {

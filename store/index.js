@@ -99,8 +99,8 @@ export const mutations = {
       state.cart = []; // Vide la liste des produits dans le panier
     }
   ,
-  resetCart(state) {
-    state.cart = []; // Vide la liste des produits dans le panier
+  clearCart(state) {
+    state.cart = []; // Réinitialiser le panier
   }
 };
 
