@@ -72,7 +72,6 @@
         modalTitle: 'Checkout',
         removeLabel: 'Remove from cart',
         cartEmptyLabel: 'Your cart is empty',
-        closeLabel: 'Close',
         isCheckoutSection: false,
         stripe: null,
         cardElement: null,
@@ -80,7 +79,6 @@
         successMessage: null,
         paymentLoading: false,
         isPaymentSuccessful: false,
-        purchasedProducts: [],
       };
     },
     computed: {
@@ -126,57 +124,27 @@
         this.cardElement.mount('#card-element');
       },
       async processPayment() {
-  try {
-    const amount = this.calculateTotalAmount();
-    const response = await paymentApi.createPaymentIntent(amount);
-
-    // S'assurer que cartItems n'est pas undefined et est une liste vide par défaut
-    this.purchasedProducts = Array.isArray(this.cartItems) ? [...this.cartItems] : [];
-
-    // Affiche les détails de paiement
-    this.showPaymentSummary(response.data);
-
-    // Réinitialise le panier après l'affichage des détails
-    this.$store.commit('resetCart');
-
-    // Réinitialise l'état du checkout pour masquer le bouton Pay Now
-    this.isPaymentSuccessful = true;
-
-    // Fermer le modal de checkout après quelques secondes
-    setTimeout(() => {
-      this.$store.commit('showCheckoutModal', false);
-    }, 3000); // Par exemple, ferme après 3 secondes
-
-  } catch (error) {
-    console.error('Erreur lors du paiement:', error);
-  }
-}
-
-,
+        try {
+          const amount = this.calculateTotalAmount();
+          const response = await paymentApi.createPaymentIntent(amount);
+          this.showPaymentSummary(response.data);
+          this.isPaymentSuccessful = true;
+        } catch (error) {
+          console.error('Erreur lors de la création de l\'intention de paiement:', error);
+        }
+      },
       calculateTotalAmount() {
         let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
         let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
         return finalPrice * 100; // Stripe attend les montants en centimes
       },
       showPaymentSummary(paymentIntent) {
-  const amountPaid = (paymentIntent.amount / 100).toFixed(2); // Convertir en euros
-  this.successMessage = `
-    Payment succeeded!
-    Payment ID: ${paymentIntent.id}
-    Amount paid: ${amountPaid} €
-    Payment Method: ${paymentIntent.payment_method}
-  `;
-
-  // Inclure les produits achetés dans le récapitulatif
-  const purchasedItems = this.purchasedProducts.map(product => {
-    return `${product.title} (Quantity: ${product.quantity || 1}) - ${product.price} €`;
-  }).join(', ');
-
-  this.successMessage += `
-    Produits achetés: ${purchasedItems}
-  `;
-}
-,
+        this.successMessage = {
+          id: paymentIntent.id,
+          amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
+          paymentMethod: paymentIntent.payment_method,
+        };
+      },
     }
   };
   </script>
