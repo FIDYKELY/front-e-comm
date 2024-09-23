@@ -116,13 +116,14 @@ export default {
       try {
         // Attempt login using authApi function
         const response = await authApi.login(this.email, this.password);
-        const { token } = response.data; // Get the token from the response
+        const { token, data: { id } } = response.data; // Obtenez l'ID de l'utilisateur
 
         if (token) {
           if (process.client) {
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('userName', this.email.split('@')[0]);
-          }
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userId', id); // Stockez l'ID utilisateur
+    localStorage.setItem('userName', this.email.split('@')[0]);
+  }
           this.$store.commit('SET_USER', {
             isLoggedIn: true,
             name: this.email.split('@')[0],
@@ -162,6 +163,7 @@ export default {
     logout() {
       if (process.client) {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('userId'); // Remove user ID on logout
         localStorage.removeItem('userName');
       }
       this.$store.commit('SET_USER', {
@@ -185,7 +187,6 @@ export default {
   }
 };
 </script>
-
 
 <style lang="scss">
   .fa-exclamation-circle {

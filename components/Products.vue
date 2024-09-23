@@ -25,27 +25,31 @@
               <span :class="[detail ? 'text-3xl' : 'text-lg']" class="font-medium">{{ product.product_name }}</span>
             </nuxt-link>
           </div>
+
           <button
-            class="button text-lg"
-            :title="removeFromFavouriteLabel"
-            v-show="product.isFavourite"
-            @click="removeFromFavourite(product.id)"
-          >
-            <span class="icon">
-              <i class="fas fa-heart text-red"></i>
-            </span>
-          </button>
-          <button
-            class="button text-lg"
-            :title="addToFavouriteLabel"
-            v-show="!product.isFavourite"
-            @click="saveToFavorite(product.id)"
-          >
-            <span class="icon">
-              <i class="far fa-heart text-red"></i>
-            </span>
-          </button>
+  class="button text-lg"
+  :title="removeFromFavouriteLabel"
+  v-show="product.isFavourite"
+  @click="removeFromFavourite(product.id)"
+>
+  <span class="icon">
+    <i class="fas fa-heart text-red"></i>
+  </span>
+</button>
+
+<button
+  class="button text-lg"
+  :title="addToFavouriteLabel"
+  v-show="!product.isFavourite"
+  @click="addToFavourites(product.id)"
+>
+  <span class="icon">
+    <i class="far fa-heart text-red"></i>
+  </span>
+</button>
+
         </div>
+
         <div class="content is-clearfix">
           <p :class="[detail ? 'text-2xl' : 'text-base']">{{ product.description }}</p>
           <div class="flex justify-between">
@@ -66,7 +70,6 @@
             <button class="rounded-xl p-3 bg-blue text-white" v-if="!product.isAddedToCart" @click="addToCart(product.id)">
               {{ addToCartLabel }}
             </button>
-
             <button class="rounded-xl p-3" v-if="product.isAddedToCart" @click="removeFromCart(product.id)">
               {{ removeFromCartLabel }}
             </button>
@@ -77,8 +80,11 @@
   </div>
 </template>
 
+
+
 <script>
 import productService from '~/api/products';
+import favouriteService from '~/api/favourites';
 
 export default {
   name: 'products',
@@ -95,52 +101,87 @@ export default {
     };
   },
   async mounted() {
-    try {
-      const response = await productService.getAllProducts();
-      this.products = response.data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des produits :', error);
-    }
+  try {
+    const response = await productService.getAllProducts();
+    this.products = response.data;
 
-    for (let i = 1; i <= 20; i++) {
-      this.quantityArray.push(i);
-    }
-  },
-  methods: {
-    addToCart(productId) {
-    console.log('Add to cart clicked for product ID:', productId); // Log product ID
-    const product = this.products.find(p => p.id === productId);
-    console.log('Product found:', product); // Log product details
-    if (product) {
-      const cartItem = {
-        id: product.id,
-        name: product.product_name,
-        price: product.price,
-        quantity: this.selected, // Utiliser la quantité sélectionnée
-        image_url: product.image_url
-      };
-      console.log('Cart item:', cartItem); // Log cart item
-      // Commiter l'ajout au panier
-      this.$store.commit('addToCart', cartItem);
-      product.isAddedToCart = true; // Mettre à jour le statut
+    if (this.$store.state.userInfo.isLoggedIn) {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        const favResponse = await favouriteService.getUserFavourites(userId);
+        console.log('Favoris récupérés :', favResponse.data); // Ajoutez ce log pour vérifier
+
+        const favouriteProductIds = favResponse.data.map(fav => fav.product_id);
+
+        this.products.forEach(product => {
+          product.isFavourite = favouriteProductIds.includes(product.id);
+          console.log(`Produit ${product.id} : isFavourite = ${product.isFavourite}`);
+        });
+      }
     } else {
-      console.error('Product not found'); // Log error if product is not found
+      this.products.forEach(product => {
+        product.isFavourite = false;
+      });
     }
-  },
-  removeFromCart(productId) {
-    this.$store.commit('removeFromCart', productId);
-    this.$store.commit('setAddedBtn', { id: productId, status: false });
-  },
-    saveToFavorite(id) {
-      if (this.$store.state.userInfo.isLoggedIn) {
-        this.$store.commit('addToFavourite', id);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des produits ou des favoris :', error);
+  }
+
+  this.quantityArray = Array.from({ length: 20 }, (_, i) => i + 1);
+}
+
+,
+
+  methods: {
+    async addToCart(productId) {
+      console.log('Add to cart clicked for product ID:', productId);
+      const product = this.products.find(p => p.id === productId);
+      console.log('Product found:', product);
+      if (product) {
+        const cartItem = {
+          id: product.id,
+          name: product.product_name,
+          price: product.price,
+          quantity: this.selected,
+          image_url: product.image_url
+        };
+        console.log('Cart item:', cartItem);
+        this.$store.commit('addToCart', cartItem);
+        product.isAddedToCart = true;
       } else {
-        this.$store.commit('showLoginModal', true);
+        console.error('Product not found');
       }
     },
-    removeFromFavourite(id) {
-      this.$store.commit('removeFromFavourite', id);
+    removeFromCart(productId) {
+      this.$store.commit('removeFromCart', productId);
+      this.$store.commit('setAddedBtn', { id: productId, status: false });
     },
+    async addToFavourites(productId) {
+  try {
+    await favouriteService.addFavourite(productId);
+    const product = this.products.find(p => p.id === productId);
+    if (product) {
+      product.isFavourite = true; // Mettez à jour l'état localement
+      console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout aux favoris:', error);
+  }
+},
+
+async removeFromFavourite(productId) {
+  try {
+    await favouriteService.removeFavourite(productId);
+    const product = this.products.find(p => p.id === productId);
+    if (product) {
+      product.isFavourite = false; // Mettez à jour l'état localement
+      console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
+    }
+  } catch (error) {
+    console.error('Erreur lors du retrait des favoris:', error);
+  }
+}
+,
     onSelectQuantity(id) {
       let data = {
         id: id,
@@ -154,6 +195,7 @@ export default {
   },
 };
 </script>
+
 
 <style lang="scss" scoped>
 .detail {
