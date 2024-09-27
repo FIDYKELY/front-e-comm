@@ -25,7 +25,7 @@
           </span>
         </button>
         <button class="cursor-pointer" v-if="isUserLoggedIn" @click="onShowDropdown">
-          Welcome {{ getUserName }}
+          Bienvenue {{ getUserName }}
         </button>
         <div v-if="showDropdown && isUserLoggedIn" class="dropdown w-52 h-28">
           <nuxt-link :to="{ name: 'user-wishlist' }" class="button text-center">
@@ -37,11 +37,11 @@
         </div>
         <div v-if="showDropdown && !isUserLoggedIn" class="dropdown">
           <button class="button" @click="showLoginModal">
-            <span class="text-lg">Already registered?<br /> {{ loginLabel }}</span>
+            <span class="text-lg"><br /> {{ loginLabel }}</span>
             <i class="fa fa-sign-in"></i>
           </button>
           <button class="button" @click="showSignupModal">
-            <span class="text-lg">New User?<br /> {{ signupLabel }}</span>
+            <span class="text-lg"><br /> {{ signupLabel }}</span>
             <i class="fa fa-user-plus"></i>
           </button>
         </div>
@@ -57,9 +57,9 @@ export default {
   data() {
     return {
       showDropdown: false,
-      logoutLabel: 'Log out',
-      loginLabel: 'Log in',
-      signupLabel: 'Sign up',
+      logoutLabel: 'Deconnexion',
+      loginLabel: 'Se connecter',
+      signupLabel: "S'inscrire",
       wishlistLabel: 'Wishlist',
     };
   },

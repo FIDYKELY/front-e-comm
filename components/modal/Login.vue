@@ -56,13 +56,13 @@ export default {
 
   data() {
     return {
-      modalTitle: 'Log in',
-      modalTitleLoggedIn: 'Welcome!',
-      loginBtnLabel: 'Log in',
-      emailRequiredLabel: 'Email required',
-      passwordRequiredLabel: 'Password required',
-      emailNotValidLabel: 'Valid email required',
-      btnLoggedInLabel: 'Close',
+      modalTitle: 'Se connecter',
+      modalTitleLoggedIn: 'Bienvenue!',
+      loginBtnLabel: 'Se connecter',
+      emailRequiredLabel: 'Email requis',
+      passwordRequiredLabel: 'Password requis',
+      emailNotValidLabel: 'Valide email requis',
+      btnLoggedInLabel: 'Fermer',
       email: '',
       password: '',
       highlightEmailWithError: null,

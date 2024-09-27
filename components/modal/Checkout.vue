@@ -70,8 +70,8 @@ export default {
   data() {
     return {
       modalTitle: 'Checkout',
-      removeLabel: 'Remove from cart',
-      cartEmptyLabel: 'Your cart is empty',
+      removeLabel: 'Supprimer du panier',
+      cartEmptyLabel: 'Panier vide',
       isCheckoutSection: false,
       stripe: null,
       cardElement: null,

@@ -27,26 +27,26 @@
           </div>
 
           <button
-  class="button text-lg"
-  :title="removeFromFavouriteLabel"
-  v-show="product.isFavourite"
-  @click="removeFromFavourite(product.id)"
->
-  <span class="icon">
-    <i class="fas fa-heart text-red"></i>
-  </span>
-</button>
+          class="button text-lg"
+          :title="removeFromFavouriteLabel"
+          v-show="product.isFavourite"
+          @click="removeFromFavourite(product.id)"
+        >
+          <span class="icon">
+            <i class="fas fa-heart text-red"></i>
+          </span>
+        </button>
 
-<button
-  class="button text-lg"
-  :title="addToFavouriteLabel"
-  v-show="!product.isFavourite"
-  @click="addToFavourites(product.id)"
->
-  <span class="icon">
-    <i class="far fa-heart text-red"></i>
-  </span>
-</button>
+        <button
+          class="button text-lg"
+          :title="addToFavouriteLabel"
+          v-show="!product.isFavourite"
+          @click="addToFavourites(product.id)"
+        >
+          <span class="icon">
+            <i class="far fa-heart text-red"></i>
+          </span>
+        </button>
 
         </div>
 
@@ -164,10 +164,13 @@ export default {
       product.isFavourite = true; // Mettez à jour l'état localement
       console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
     }
+    // Enlevez la ligne suivante si vous mettez déjà à jour l'état
+    await this.loadProducts(); // Recharger n'est pas nécessaire si l'état est déjà mis à jour
   } catch (error) {
     console.error('Erreur lors de l\'ajout aux favoris:', error);
   }
-},
+}
+,
 
 async removeFromFavourite(productId) {
   try {
@@ -177,11 +180,23 @@ async removeFromFavourite(productId) {
       product.isFavourite = false; // Mettez à jour l'état localement
       console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
     }
+    // Recharger n'est pas nécessaire ici non plus si l'état est mis à jour
+    await this.loadProducts();
   } catch (error) {
     console.error('Erreur lors du retrait des favoris:', error);
   }
 }
+
 ,
+async loadProducts() {
+  try {
+    const response = await productService.getAllProducts();
+    this.products = response.data;
+    // Ajoutez le code pour gérer les favoris ici, comme dans mounted()
+  } catch (error) {
+    console.error('Erreur lors de la récupération des produits:', error);
+  }
+},
     onSelectQuantity(id) {
       let data = {
         id: id,

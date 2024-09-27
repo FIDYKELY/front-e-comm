@@ -10,30 +10,37 @@
             <span class="text-3xl font-medium">{{ product.product_name }}</span>
           </div>
           <button
-            class="button text-lg"
-            :title="removeFromFavouriteLabel"
-            v-show="product.isFavourite"
-            @click="removeFromFavourite(product.id)"
-          >
-            <span class="icon">
-              <i class="fas fa-heart text-red"></i>
-            </span>
-          </button>
-          <button
-            class="button text-lg"
-            :title="addToFavouriteLabel"
-            v-show="!product.isFavourite"
-            @click="saveToFavorite(product.id)"
-          >
-            <span class="icon">
-              <i class="far fa-heart text-red"></i>
-            </span>
-          </button>
+          class="button text-lg"
+          :title="removeFromFavouriteLabel"
+          v-show="product.isFavourite"
+          @click="removeFromFavourite(product.id)"
+        >
+          <span class="icon">
+            <i class="fas fa-heart text-red"></i>
+          </span>
+        </button>
+        <button
+          class="button text-lg"
+          :title="addToFavouriteLabel"
+          v-show="!product.isFavourite"
+          @click="saveToFavorite(product.id)"
+        >
+          <span class="icon">
+            <i class="far fa-heart text-red"></i>
+          </span>
+        </button>
+
         </div>
         <p class="text-2xl">{{ product.description }}</p>
         <div class="flex justify-between">
           <div class="flex items-center">
-            <i v-for="index in Math.round(product.ratings)" :key="`stars-${index}`" class="fa fa-star text-gold"></i>
+            <i
+              v-for="star in 5"
+              :key="star"
+              class="fa"
+              :class="getStarClass(star)"
+              @click="rateProduct(star)"
+            ></i>
             <p class="ml-2 text-lg">{{ product.reviews > 0 ? `${product.reviews} Reviews` : 'No reviews' }}</p>
           </div>
           <p class="text-3xl font-medium">
@@ -58,19 +65,21 @@
         </div>
         <div class="rating-container mt-4">
           <p class="text-lg font-medium">Rate this product:</p>
-
           <div class="rating-stars flex">
             <i
-              v-for="star in 5"
+              v-for="star in [1, 2, 3, 4, 5]"
               :key="star"
               class="fa"
-              :class="star <= currentRating ? 'fa-star text-gold' : 'fa-star-o text-gray-400'"
+              :class="getStarClass(star)"
               @click="rateProduct(star)"
+              style="font-size: 18px;"
             ></i>
           </div>
 
+
           <p class="mt-2">Current rating: {{ currentRating }}</p>
         </div>
+
       </div>
     </div>
     <div class="comments-section mt-4">
@@ -92,6 +101,8 @@
 
 <script>
 import productService from '~/api/products';
+import favouriteService from '~/api/favourites';
+
 
 export default {
   name: 'product_detail-id',
@@ -119,26 +130,79 @@ export default {
         return { product: null };
       }
     },
-  async created() {
-      const productId = this.$route.params.id;
-      try {
-        const response = await productService.getProductById(productId);
-        this.product = response.data;
-        this.currentRating = this.product.ratings || 0;
+    async created() {
+    const productId = this.$route.params.id;
+    try {
+      const response = await productService.getProductById(productId);
+      this.product = response.data;
+      this.currentRating = this.product.ratings || 0;
 
-        // Charger les commentaires du produit
-        const commentsResponse = await productService.getProductComments(productId);
-        this.comments = commentsResponse.data; // Stocker les commentaires récupérés
-      } catch (error) {
-        console.error('Erreur lors de la récupération des détails du produit ou des commentaires:', error);
-      }
+      // Charger les commentaires du produit
+      const commentsResponse = await productService.getProductComments(productId);
+      this.comments = commentsResponse.data; // Stocker les commentaires récupérés
 
-      // Créer la liste des quantités disponibles
-      for (let i = 1; i <= 20; i++) {
-        this.quantityArray.push(i);
+      // Vérifier si le produit est un favori
+      if (this.$store.state.userInfo.isLoggedIn) {
+        const userId = localStorage.getItem('userId');
+        if (userId) {
+          const favResponse = await favouriteService.getUserFavourites(userId);
+          const favouriteProductIds = favResponse.data.map(fav => fav.product_id);
+
+          this.product.isFavourite = favouriteProductIds.includes(this.product.id);
+        }
+      } else {
+        this.product.isFavourite = false;
       }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des détails du produit ou des commentaires:', error);
+    }
+
+    // Créer la liste des quantités disponibles
+    for (let i = 1; i <= 20; i++) {
+      this.quantityArray.push(i);
+    }
   },
+
   methods: {
+    async saveToFavorite(productId) {
+    try {
+      await favouriteService.addFavourite(productId);
+      const product = this.product;
+      if (product && product.id === productId) {
+        product.isFavourite = true; // Met à jour l'état localement
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout aux favoris:', error);
+    }
+  },
+
+  async removeFromFavourite(productId) {
+    try {
+      await favouriteService.removeFavourite(productId);
+      const product = this.product;
+      if (product && product.id === productId) {
+        product.isFavourite = false; // Met à jour l'état localement
+      }
+    } catch (error) {
+      console.error('Erreur lors du retrait des favoris:', error);
+    }
+  },
+    getStarClass(star) {
+    if (star <= this.currentRating) {
+      return 'fa fa-star text-gold'; // Étoile pleine
+    } else if (star - 0.5 === this.currentRating) {
+      return 'fa fa-star-half-o text-gold'; // Étoile demi
+    } else {
+      return 'fa fa-star-o text-gray-400'; // Étoile vide
+    }
+  },
+    rateProduct(star) {
+    this.currentRating = star; // Étoile pleine
+    if (star % 1 !== 0) {
+      this.currentRating = star - 0.5; // Étoile demi
+    }
+    // Appeler l'API pour sauvegarder la nouvelle note
+  },
     addToCart(productId) {
     const cartItem = {
       id: this.product.id,
@@ -208,17 +272,39 @@ export default {
 </script>
 
 <style scoped>
-.rating-container {
-  margin-top: 20px;
-}
-
-.rating-stars {
-  font-size: 24px;
+.rating-stars .fa {
+  width: 24px; /* Largeur pour que l'espace soit défini */
+  height: 24px; /* Hauteur pour que l'espace soit défini */
+  /* font-size: 24px; Taille de police */
+  font-size: 18px; /* Taille des étoiles */
+  color: gold; /* Couleur pour les étoiles remplies */
+  margin-right: 5px; /* Espacement entre les étoiles */
+  transition: color 0.3s ease;
 }
 
 .rating-stars .fa-star {
-  /* cursor: pointer; */
-  font-size: 24px; /* Ajuste la taille des icônes pour t'assurer qu'elles sont visibles */
-  color: gold; /* Assure-toi que les icônes ont une couleur visible */
+  color: gold; /* Couleur des étoiles pleines */
 }
+
+.rating-stars .fa-star-o {
+  color: #888; /* Couleur des étoiles vides, plus foncé pour bien être visible */
+  opacity: 0.6; /* Ajoutez un peu de transparence si nécessaire */
+}
+
+
+.rating-stars .fa-star:hover,
+.rating-stars .fa-star-o:hover {
+  color: #ffcc00; /* Jaune doré au survol */
+}
+
+.rating-stars .fa-star:active,
+.rating-stars .fa-star-o:active {
+  transform: scale(1.1); /* Effet visuel au clic */
+}
+
+.rating-stars .fa-star-half-o {
+  color: gold; /* Demi-étoile en or */
+}
+
+
 </style>
