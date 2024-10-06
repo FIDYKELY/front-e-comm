@@ -81,6 +81,13 @@ export default {
       isPaymentSuccessful: false,
     };
   },
+  getters: {
+  productsAdded(state) {
+    return state.products; // Assurez-vous que cette propriété existe dans l'état du store
+  },
+  // autres getters...
+},
+
   computed: {
     products() {
       return this.$store.getters.productsAdded;
@@ -140,27 +147,80 @@ export default {
       this.cardElement.mount('#card-element');
     },
     async processPayment() {
-      try {
-        const amount = this.calculateTotalAmount();
-        const response = await paymentApi.createPaymentIntent(amount);
-        this.showPaymentSummary(response.data);
-        this.isPaymentSuccessful = true;
-      } catch (error) {
-        console.error('Erreur lors de la création de l\'intention de paiement:', error);
+    try {
+      const amount = this.calculateTotalAmount();
+
+      // Crée l'intention de paiement via l'API
+      const response = await paymentApi.createPaymentIntent(amount);
+      const clientSecret = response.data.clientSecret;
+
+      const userId = localStorage.getItem('userId'); // Vérifie si l'utilisateur est connecté
+      if (!userId) {
+        throw new Error("User ID not found in localStorage");
       }
-    },
+
+      // Confirme le paiement avec Stripe
+      const { paymentIntent, error } = await this.stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: this.cardElement,
+          billing_details: {
+            // Ajoute les informations de facturation si nécessaire
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Erreur lors de la confirmation du paiement :", error);
+        this.error = "Le paiement a échoué. Veuillez réessayer.";
+        return;
+      }
+
+      // Prépare les données de paiement
+      const paymentData = {
+        paymentId: paymentIntent.id,
+        userId: userId,
+        totalAmount: amount,
+        paymentMethod: paymentIntent.payment_method,
+        products: this.products.map(product => ({
+          productId: product.id,
+          quantity: product.quantity,
+          price: product.price,
+        })),
+      };
+
+      // Sauvegarde les détails du paiement dans le backend
+      await paymentApi.storePaymentDetails(paymentData);
+
+      // Affiche un résumé du paiement après succès
+      this.showPaymentSummary(paymentIntent);
+      this.isPaymentSuccessful = true;
+
+    } catch (error) {
+      console.error('Erreur lors du traitement du paiement:', error);
+      this.error = "Erreur lors du paiement. Veuillez vérifier vos informations et réessayer.";
+    }
+  },
+
+  showPaymentSummary(paymentIntent) {
+    this.successMessage = {
+      id: paymentIntent.id,
+      amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
+      paymentMethod: paymentIntent.payment_method,
+    };
+  },
+
     calculateTotalAmount() {
       let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
       let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
       return finalPrice * 100; // Stripe attend les montants en centimes
     },
-    showPaymentSummary(paymentIntent) {
-      this.successMessage = {
-        id: paymentIntent.id,
-        amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
-        paymentMethod: paymentIntent.payment_method,
-      };
-    },
+    // showPaymentSummary(paymentIntent) {
+    //   this.successMessage = {
+    //     id: paymentIntent.id,
+    //     amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
+    //     paymentMethod: paymentIntent.payment_method,
+    //   };
+    // },
   }
 };
 </script>

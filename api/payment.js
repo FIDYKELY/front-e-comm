@@ -10,7 +10,12 @@ const createPaymentIntent = async (amount) => {
   const apiClient = await getApiClient();
   return apiClient.post('/create-payment-intent', { amount });
 };
+const storePaymentDetails = async (paymentData) => {
+  const apiClient = await getApiClient();
+  return apiClient.post('/savePaymentDetails', paymentData); // Assurez-vous que l'URL est correcte
+};
 
 export default {
   createPaymentIntent,
+  storePaymentDetails, // Ajout de la fonction storePaymentDetails
 };
