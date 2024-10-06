@@ -27,26 +27,28 @@
           </div>
 
           <button
-          class="button text-lg"
-          :title="removeFromFavouriteLabel"
-          v-show="product.isFavourite"
-          @click="removeFromFavourite(product.id)"
-        >
-          <span class="icon">
-            <i class="fas fa-heart text-red"></i>
-          </span>
-        </button>
+  class="button text-lg"
+  :title="removeFromFavouriteLabel"
+  v-if="product.isFavourite"
+  @click="removeFromFavourite(product.id)"
+>
+  <span class="icon">
+    <i class="fas fa-heart text-red"></i>
+  </span>
+</button>
 
-        <button
-          class="button text-lg"
-          :title="addToFavouriteLabel"
-          v-show="!product.isFavourite"
-          @click="addToFavourites(product.id)"
-        >
-          <span class="icon">
-            <i class="far fa-heart text-red"></i>
-          </span>
-        </button>
+<button
+  class="button text-lg"
+  :title="addToFavouriteLabel"
+  v-if="!product.isFavourite"
+  @click="addToFavourites(product.id)"
+>
+  <span class="icon">
+    <i class="far fa-heart text-red"></i>
+  </span>
+</button>
+
+
 
         </div>
 
@@ -62,11 +64,15 @@
             </p>
           </div>
           <div class="flex justify-between mt-5 items-center">
-            <select class="p-2 border-2 rounded-2xl" @change="onSelectQuantity(product.id)" v-model="selected">
-              <option v-bind:key="quantity" v-for="quantity in quantityArray" :value="quantity">
-                {{ quantity }}
-              </option>
-            </select>
+            <select
+  class="p-2 border-2 rounded-2xl"
+  @change="onSelectQuantity(product.id, product.selectedQuantity)"
+  v-model="product.selectedQuantity"
+>
+  <option v-for="quantity in quantityArray" :key="quantity" :value="quantity">{{ quantity }}</option>
+</select>
+
+
             <button class="rounded-xl p-3 bg-blue text-white" v-if="!product.isAddedToCart" @click="addToCart(product.id)">
               {{ addToCartLabel }}
             </button>
@@ -114,6 +120,7 @@ export default {
         const favouriteProductIds = favResponse.data.map(fav => fav.product_id);
 
         this.products.forEach(product => {
+          product.selectedQuantity = 1;
           product.isFavourite = favouriteProductIds.includes(product.id);
           console.log(`Produit ${product.id} : isFavourite = ${product.isFavourite}`);
         });
@@ -142,7 +149,7 @@ export default {
           id: product.id,
           name: product.product_name,
           price: product.price,
-          quantity: this.selected,
+          quantity: product.selectedQuantity,
           image_url: product.image_url
         };
         console.log('Cart item:', cartItem);
@@ -161,31 +168,27 @@ export default {
     await favouriteService.addFavourite(productId);
     const product = this.products.find(p => p.id === productId);
     if (product) {
-      product.isFavourite = true; // Mettez à jour l'état localement
-      console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
+      this.$set(product, 'isFavourite', true); // Mise à jour de l'état
+      this.$forceUpdate(); // Forcer le re-rendu
     }
-    // Enlevez la ligne suivante si vous mettez déjà à jour l'état
-    await this.loadProducts(); // Recharger n'est pas nécessaire si l'état est déjà mis à jour
   } catch (error) {
     console.error('Erreur lors de l\'ajout aux favoris:', error);
   }
-}
-,
+},
 
 async removeFromFavourite(productId) {
   try {
     await favouriteService.removeFavourite(productId);
     const product = this.products.find(p => p.id === productId);
     if (product) {
-      product.isFavourite = false; // Mettez à jour l'état localement
-      console.log(`Produit ${productId} mis à jour: isFavourite = ${product.isFavourite}`);
+      this.$set(product, 'isFavourite', false); // Mise à jour de l'état
+      this.$forceUpdate(); // Forcer le re-rendu
     }
-    // Recharger n'est pas nécessaire ici non plus si l'état est mis à jour
-    await this.loadProducts();
   } catch (error) {
     console.error('Erreur lors du retrait des favoris:', error);
   }
 }
+
 
 ,
 async loadProducts() {
@@ -197,13 +200,12 @@ async loadProducts() {
     console.error('Erreur lors de la récupération des produits:', error);
   }
 },
-    onSelectQuantity(id) {
-      let data = {
-        id: id,
-        quantity: this.selected,
-      };
-      this.$store.commit('quantity', data);
-    },
+onSelectQuantity(id, quantity) {
+    const product = this.products.find(p => p.id === id);
+    if (product) {
+      product.selectedQuantity = quantity;
+    }
+  },
     getImageUrl(imageUrl) {
       return `http://localhost:8000/${imageUrl}`;
     }
