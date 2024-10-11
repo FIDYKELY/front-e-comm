@@ -3,13 +3,18 @@
     <div
       v-for="product in products"
       :key="product.id"
+       @click="handleProductClick(product.id)"
       :class="[detail ? 'detail' : '']"
       class="rounded-2xl shadow-custom bg-white p-4"
     >
       <div class="img-wrapper rounded-t-2xl">
-        <nuxt-link :to="{ name: 'product_detail-id', params: { id: product.id } }">
+        <!-- <nuxt-link :to="{ name: 'product_detail-id', params: { id: product.id } }">
           <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="rounded-2xl" />
+        </nuxt-link> -->
+        <nuxt-link :to="{ name: 'product_detail-id', params: { id: product.id } }">
+          <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="rounded-2xl transition-transform duration-500 ease-in-out transform hover:scale-105" />
         </nuxt-link>
+
       </div>
       <div class="text-wrapper p-4">
         <div class="flex items-center justify-between mb-3">
@@ -27,26 +32,26 @@
           </div>
 
           <button
-  class="button text-lg"
-  :title="removeFromFavouriteLabel"
-  v-if="product.isFavourite"
-  @click="removeFromFavourite(product.id)"
->
-  <span class="icon">
-    <i class="fas fa-heart text-red"></i>
-  </span>
-</button>
+            class="button text-lg"
+            :title="removeFromFavouriteLabel"
+            v-if="product.isFavourite"
+            @click="removeFromFavourite(product.id)"
+          >
+            <span class="icon">
+              <i class="fas fa-heart text-red"></i>
+            </span>
+          </button>
 
-<button
-  class="button text-lg"
-  :title="addToFavouriteLabel"
-  v-if="!product.isFavourite"
-  @click="addToFavourites(product.id)"
->
-  <span class="icon">
-    <i class="far fa-heart text-red"></i>
-  </span>
-</button>
+          <button
+            class="button text-lg"
+            :title="addToFavouriteLabel"
+            v-if="!product.isFavourite"
+            @click="addToFavourites(product.id)"
+          >
+            <span class="icon">
+              <i class="far fa-heart text-red"></i>
+            </span>
+          </button>
 
 
 
@@ -65,17 +70,18 @@
           </div>
           <div class="flex justify-between mt-5 items-center">
             <select
-  class="p-2 border-2 rounded-2xl"
-  @change="onSelectQuantity(product.id, product.selectedQuantity)"
-  v-model="product.selectedQuantity"
->
-  <option v-for="quantity in quantityArray" :key="quantity" :value="quantity">{{ quantity }}</option>
-</select>
+              class="p-2 border-2 rounded-2xl"
+              @change="onSelectQuantity(product.id, product.selectedQuantity)"
+              v-model="product.selectedQuantity"
+            >
+              <option v-for="quantity in quantityArray" :key="quantity" :value="quantity">{{ quantity }}</option>
+            </select>
 
 
-            <button class="rounded-xl p-3 bg-blue text-white" v-if="!product.isAddedToCart" @click="addToCart(product.id)">
+            <button class="rounded-xl p-3 bg-blue text-white" v-if="!product.isAddedToCart" @click="addToCart(product.id); handleProductClick(product.id)">
               {{ addToCartLabel }}
             </button>
+
             <button class="rounded-xl p-3" v-if="product.isAddedToCart" @click="removeFromCart(product.id)">
               {{ removeFromCartLabel }}
             </button>
@@ -95,6 +101,7 @@ import favouriteService from '~/api/favourites';
 export default {
   name: 'products',
   props: ['detail'],
+  transition: 'fade',
   data() {
     return {
       products: [],
@@ -208,7 +215,23 @@ onSelectQuantity(id, quantity) {
   },
     getImageUrl(imageUrl) {
       return `http://localhost:8000/${imageUrl}`;
-    }
+    },
+    async handleProductClick(productId) {
+      // Appelle la méthode pour enregistrer le clic sur le produit
+      await this.registerProductClick(productId);
+
+      // Vous pouvez également effectuer d'autres actions, comme rediriger vers une page de détails du produit
+      // this.$router.push({ name: 'ProductDetails', params: { id: productId } });
+    },
+    async registerProductClick(productId) {
+      try {
+        // Enregistre le clic sur le produit en appelant le service
+        await productService.registerProductClick(productId);
+        console.log(`Product click registered for product ID: ${productId}`);
+      } catch (error) {
+        console.error('Erreur lors de l\'enregistrement du clic sur le produit:', error);
+      }
+    },
   },
 };
 </script>

@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.fade-enter-active, .fade-leave-active {
+  @apply transition-opacity duration-500; /* Utilise Tailwind pour une transition */
+}
+
+.fade-enter, .fade-leave-to /* .fade-leave-active pour Nuxt 2.x */ {
+  @apply opacity-0;
+}

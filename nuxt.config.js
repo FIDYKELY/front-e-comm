@@ -10,6 +10,10 @@ module.exports = {
   http: {
     baseURL: 'http://localhost:8000/api/products/', // Base URL pour les appels API
   },
+  pageTransition: {
+    name: 'fade',
+    mode: 'out-in', // ou 'in-out'
+  },
 
   /*
    ** Headers of the page
@@ -192,5 +196,6 @@ module.exports = {
         'postcss-nested': {}
       },
     },
-  }
+  },
+
 };

@@ -4,9 +4,16 @@
     role="navigation"
     aria-label="main navigation"
   >
-    <nuxt-link :to="{ name: 'index' }" class="navbar-item">
-      <h1 class="title w-40 h-12"></h1>
+    <!-- <nuxt-link :to="{ name: 'index' }" class="navbar-item">
+      <h1 class="site-title">MadagascarMarketplace</h1>
+    </nuxt-link> -->
+    <nuxt-link :to="{ name: 'index' }" class="navbar-item transition duration-500 ease-in-out transform hover:scale-105">
+      <h1 class="site-title">MadagascarMarketplace</h1>
     </nuxt-link>
+    <nuxt-link :to="{ name: 'index' }" class="navbar-item">
+      <h1 class="publish">Publier un  article</h1>
+    </nuxt-link>
+
 
     <div class="flex items-center">
       <div class="mx-2">
@@ -53,6 +60,7 @@
 <script>
 export default {
   name: 'VmHeader',
+  transition: 'fade',
 
   data() {
     return {
@@ -67,7 +75,7 @@ export default {
   computed: {
     numProductsAdded() {
       const count = this.$store.getters.productsAdded.length;
-      console.log('Number of products in cart:', count); // Debug log
+      // console.log('Number of products in cart:', count);
       return count;
     },
     isUserLoggedIn() {
@@ -121,11 +129,30 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .title {
-    background: url('../../static/vuemmerce-logo.png') no-repeat;
-    background-position: 50% 50%;
-    background-size: 165px;
-  }
+  // .title {
+  //   background: url('../../static/vuemmerce-logo.png') no-repeat;
+  //   background-position: 50% 50%;
+  //   background-size: 165px;
+  // }
+  .site-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+    color: #87CEEB;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+.publish{
+    font-size: 1.5em;
+    font-weight: bold;
+    // text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+    color: #5fb7da;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
   .dropdown {
     @apply absolute;
     @apply p-3;

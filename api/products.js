@@ -52,6 +52,10 @@ const createProductComment = async (id, comment) => {
   const apiClient = await getApiClient(token);
   return apiClient.post(`/${id}/comments`, comment);
 };
+const registerProductClick = async (id) => {
+  const apiClient = await getApiClient();
+  return apiClient.post(`/${id}/click`);
+};
 
 export default {
   getAllProducts,
@@ -63,4 +67,5 @@ export default {
   updateProductRating,
   getProductComments,
   createProductComment,
+  registerProductClick,
 };
