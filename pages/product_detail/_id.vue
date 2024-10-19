@@ -2,7 +2,7 @@
   <div v-if="product">
     <div class="rounded-2xl shadow-custom bg-white p-4">
       <div class="img-wrapper rounded-t-2xl">
-        <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="rounded-2xl" />
+        <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="w-64 h-64 object-cover rounded-2xl transition-transform duration-500 ease-in-out transform hover:scale-105" />
       </div>
       <div class="text-wrapper p-4">
         <div class="flex items-center justify-between mb-3">
@@ -48,7 +48,7 @@
           </p>
         </div>
         <div class="mt-4">
-          <p class="text-lg font-medium">Available Quantity: {{ product.quantity }}</p>
+          <p class="text-lg font-medium">Quantité disponible : {{ product.quantity }}</p>
         </div>
         <div class="flex justify-between mt-5 items-center">
           <select class="p-2 border-2 rounded-2xl" @change="onSelectQuantity(product.id)" v-model="selected">
@@ -64,7 +64,7 @@
           </button>
         </div>
         <div class="rating-container mt-4">
-          <p class="text-lg font-medium">Rate this product:</p>
+          <p class="text-lg font-medium">Évaluez ce produit :</p>
           <div class="rating-stars flex">
             <i
               v-for="star in [1, 2, 3, 4, 5]"
@@ -77,24 +77,41 @@
           </div>
 
 
-          <p class="mt-2">Current rating: {{ currentRating }}</p>
+          <p class="mt-2">Note actuelle : {{ currentRating }}</p>
         </div>
 
       </div>
     </div>
     <div class="comments-section mt-4">
-      <h3>Commentaires</h3>
-      <div v-for="comment in comments" :key="comment.id" class="comment">
-        <p>{{ comment.comment }}</p>
-        <small>Posté par Utilisateur {{ comment.user_id }} le {{ new Date(comment.createdAt).toLocaleString() }}</small>
-      </div>
-      <form @submit.prevent="submitComment">
-        <textarea v-model="newComment" placeholder="Écrire un commentaire..." required></textarea>
-        <button type="submit">Poster un commentaire</button>
-        <p v-if="errorMessage" class="text-red-500">{{ errorMessage }}</p>
-      </form>
+  <h3 class="text-2xl font-bold mb-4">Commentaires</h3>
 
-    </div>
+  <div v-for="comment in comments" :key="comment.id" class="comment mt-2 p-4 border-b border-gray-300 transition-transform hover:shadow-lg">
+    <p class="text-lg">{{ comment.comment }}</p>
+    <small class="text-gray-500">
+      Posté par Utilisateur {{ comment.user_id }} le {{ new Date(comment.createdAt).toLocaleString() }}
+    </small>
+  </div>
+
+  <form @submit.prevent="submitComment" class="mt-4">
+    <textarea
+      v-model="newComment"
+      placeholder="Écrire un commentaire..."
+      required
+      class="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      rows="4"></textarea>
+
+    <button
+      type="submit"
+      class="mt-2 rounded-xl p-3 bg-blue-600 text-white font-semibold transition duration-300 ease-in-out hover:bg-blue-700 shadow-lg"
+    >
+      Poster un commentaire
+    </button>
+
+    <p v-if="errorMessage" class="mt-2 text-red-500">{{ errorMessage }}</p>
+  </form>
+</div>
+
+
   </div>
 
 </template>
@@ -109,7 +126,7 @@ export default {
   data() {
     return {
       product: null,
-      addToCartLabel: 'Add to cart',
+      addToCartLabel: 'Ajouter au panier',
       removeFromCartLabel: 'Remove from cart',
       addToFavouriteLabel: 'Add to favourite',
       removeFromFavouriteLabel: 'Remove from favourite',

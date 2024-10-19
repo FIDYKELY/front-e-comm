@@ -12,8 +12,14 @@
           <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="rounded-2xl" />
         </nuxt-link> -->
         <nuxt-link :to="{ name: 'product_detail-id', params: { id: product.id } }">
-          <img v-if="product.image_url" :src="getImageUrl(product.image_url)" alt="Image du produit" class="rounded-2xl transition-transform duration-500 ease-in-out transform hover:scale-105" />
+          <img
+            v-if="product.image_url"
+            :src="getImageUrl(product.image_url)"
+            alt="Image du produit"
+            class="w-64 h-64 object-cover rounded-2xl transition-transform duration-500 ease-in-out transform hover:scale-105"
+          />
         </nuxt-link>
+
 
       </div>
       <div class="text-wrapper p-4">
@@ -105,7 +111,7 @@ export default {
   data() {
     return {
       products: [],
-      addToCartLabel: 'Add to cart',
+      addToCartLabel: 'Ajouter au panier',
       removeFromCartLabel: 'Remove from cart',
       addToFavouriteLabel: 'Add to favourite',
       removeFromFavouriteLabel: 'Remove from favourite',
@@ -148,24 +154,30 @@ export default {
 
   methods: {
     async addToCart(productId) {
-      console.log('Add to cart clicked for product ID:', productId);
-      const product = this.products.find(p => p.id === productId);
-      console.log('Product found:', product);
-      if (product) {
+    console.log('Add to cart clicked for product ID:', productId);
+    const product = this.products.find(p => p.id === productId);
+    console.log('Product found:', product);
+    if (product) {
         const cartItem = {
-          id: product.id,
-          name: product.product_name,
-          price: product.price,
-          quantity: product.selectedQuantity,
-          image_url: product.image_url
+            id: product.id,
+            name: product.product_name,
+            price: product.price,
+            quantity: product.selectedQuantity,
+            image_url: product.image_url
         };
         console.log('Cart item:', cartItem);
         this.$store.commit('addToCart', cartItem);
         product.isAddedToCart = true;
-      } else {
+
+        // Mettre à jour localStorage
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        cart.push(cartItem);
+        localStorage.setItem('cart', JSON.stringify(cart));
+    } else {
         console.error('Product not found');
-      }
-    },
+    }
+},
+
     removeFromCart(productId) {
       this.$store.commit('removeFromCart', productId);
       this.$store.commit('setAddedBtn', { id: productId, status: false });

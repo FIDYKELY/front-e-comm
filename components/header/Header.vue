@@ -8,9 +8,12 @@
       <h1 class="site-title">MadagascarMarketplace</h1>
     </nuxt-link> -->
     <nuxt-link :to="{ name: 'index' }" class="navbar-item transition duration-500 ease-in-out transform hover:scale-105">
-      <h1 class="site-title">MadagascarMarketplace</h1>
+      <h1 class="site-title">MadaShop</h1>
     </nuxt-link>
-    <nuxt-link :to="{ name: 'index' }" class="navbar-item">
+    <nuxt-link :to="{ name: 'publish' }" class="navbar-item">
+      <h1 class="publish">Catégories</h1>
+    </nuxt-link>
+    <nuxt-link :to="{ name: 'publish' }" class="navbar-item">
       <h1 class="publish">Publier un  article</h1>
     </nuxt-link>
 
