@@ -14,7 +14,7 @@
 <script>
 import Products from '../Products';
 import { getByTitle } from '@/assets/filters';
-import apiProducts from '@/api/products'; // Assurez-vous que le chemin est correct
+import apiProducts from '@/api/products';
 
 export default {
   name: 'productsList',
@@ -27,16 +27,14 @@ export default {
     return {
       products: [], // Initialiser les produits ici
       noProductLabel: 'No product found',
-      loading: true, // Pour gérer l'état de chargement
+      loading: true,
     };
   },
 
   computed: {
     filteredProducts() {
       const {
-        userInfo: {
-          hasSearched
-        }
+        userInfo: { hasSearched }
       } = this.$store.state;
 
       if (hasSearched) {
@@ -61,9 +59,7 @@ export default {
 
     getProductByTitle() {
       const {
-        userInfo: {
-          productTitleSearched
-        }
+        userInfo: { productTitleSearched }
       } = this.$store.state;
 
       return getByTitle(this.products, productTitleSearched);

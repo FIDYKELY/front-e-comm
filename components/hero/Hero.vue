@@ -10,10 +10,17 @@
     >
       <div v-for="product in products" :key="product.id" class="carousel-item">
         <div class="product-card">
-          <img :src="getImageUrl(product.image_url)" alt="Product image" class="product-image" />
+          <nuxt-link :to="{ name: 'product_detail-id', params: { id: product.id } }">
+            <img
+              v-if="product.image_url"
+              :src="getImageUrl(product.image_url)"
+              alt="Image du produit"
+              class="product-image"
+            />
+          </nuxt-link>
           <h3 class="product-name">{{ product.product_name }}</h3>
           <p class="product-price">{{ product.price }} Ar</p>
-          <button @click="handleProductClick(product.id)" class="add-to-cart-btn">
+          <button @click="addToCart(product.id)" class="add-to-cart-btn">
             Ajouter au panier
           </button>
         </div>
@@ -21,6 +28,7 @@
     </vue-slick-carousel>
   </div>
 </template>
+
 
 <script>
 import VueSlickCarousel from 'vue-slick-carousel';
@@ -101,36 +109,10 @@ export default {
 </script>
 
 <style scoped>
-.vue-slick-carousel {
-  display: flex !important; /* Force le carrousel à utiliser flex */
-  justify-content: center; /* Centrer les éléments */
-  align-items: center; /* Centrer verticalement */
-}
-
-.product-carousel {
-  display: flex; /* Centrer horizontalement */
-  justify-content: center; /* Centrer le carrousel */
-  flex-wrap: nowrap; /* Évite que les éléments passent à la ligne */
-}
-
-.carousel-item {
-  display: flex; /* Utiliser flexbox pour chaque élément */
-  justify-content: center; /* Centrer le contenu de chaque produit */
-  align-items: center; /* Centrer verticalement */
-  min-width: 200px; /* Assurez-vous que les éléments ne rétrécissent pas trop */
-}
-
 .product-card {
-  flex: 0 0 auto; /* Évite que les cartes ne s'étirent */
-  width: 200px; /* Ajustez la largeur selon vos besoins */
-  margin: 0 10px; /* Espacement horizontal entre les cartes */
-  text-align: center; /* Centrer le texte dans les cartes */
-  padding: 10px; /* Espacement interne */
-  background: #fff; /* Fond blanc */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Ombre légère */
-  border-radius: 8px; /* Coins arrondis */
+  text-align: center;
+  padding: 10px;
 }
-
 
 .product-image {
   width: 100%; /* Remplissage de la largeur du conteneur */
@@ -163,5 +145,9 @@ export default {
 
 .add-to-cart-btn:hover {
   background-color: #ff4500;
+}
+
+.product-carousel {
+  margin-top: 20px; /* Ajout d'un peu d'espace au-dessus du carrousel */
 }
 </style>

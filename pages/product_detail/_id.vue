@@ -220,17 +220,35 @@ export default {
     }
     // Appeler l'API pour sauvegarder la nouvelle note
   },
-    addToCart(productId) {
-    const cartItem = {
-      id: this.product.id,
-      name: this.product.product_name,
-      price: this.product.price,
-      quantity: this.selected, // Utiliser la quantité sélectionnée
-      image_url: this.product.image_url
-    };
-    this.$store.commit('addToCart', cartItem);
-    this.$store.commit('setAddedBtn', { id: productId, status: true });
-  },
+  addToCart(productId) {
+  const cartItem = {
+    id: this.product.id,
+    name: this.product.product_name,
+    price: this.product.price,
+    quantity: this.selected, // Utiliser la quantité sélectionnée
+    image_url: this.product.image_url,
+  };
+
+  // Ajouter l'article au store
+  this.$store.commit('addToCart', cartItem);
+  this.$store.commit('setAddedBtn', { id: productId, status: true });
+
+  // Ajouter l'article au localStorage
+  const cart = JSON.parse(localStorage.getItem('cart')) || []; // Récupérer le panier existant ou un tableau vide
+  const existingItemIndex = cart.findIndex(item => item.id === cartItem.id); // Vérifier si l'item est déjà dans le panier
+
+  if (existingItemIndex > -1) {
+    // Si l'article existe déjà, mettez à jour la quantité
+    cart[existingItemIndex].quantity += cartItem.quantity;
+  } else {
+    // Sinon, ajoutez le nouvel article
+    cart.push(cartItem);
+  }
+
+  // Enregistrez le panier mis à jour dans le localStorage
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
+,
   removeFromCart(productId) {
     this.$store.commit('removeFromCart', productId);
     this.$store.commit('setAddedBtn', { id: productId, status: false });
