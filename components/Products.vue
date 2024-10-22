@@ -1,10 +1,8 @@
 <template>
   <div>
     <div
-      v-for="product in products"
-      :key="product.id"
-       @click="handleProductClick(product.id)"
-      :class="[detail ? 'detail' : '']"
+    v-if="product"
+      @click="handleProductClick(product.id)"
       class="rounded-2xl shadow-custom bg-white p-4"
     >
       <div class="img-wrapper rounded-t-2xl">
@@ -106,7 +104,7 @@ import favouriteService from '~/api/favourites';
 
 export default {
   name: 'products',
-  props: ['detail'],
+  props: ['detail', 'product'],
   transition: 'fade',
   data() {
     return {

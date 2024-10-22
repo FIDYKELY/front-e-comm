@@ -7,10 +7,16 @@ const getApiClient = async (token = null) => {
   return await initializeApiClient(baseURL, token);
 };
 
+const getRecommendations = async (userId) => {
+  const apiClient = await getApiClient();
+  return apiClient.get(`/recommendations/${userId}`); // Utiliser des backticks ici
+};
+
 const getAllProducts = async () => {
   const apiClient = await getApiClient();
   return apiClient.get('/');
 };
+
 
 const getProductById = async (id) => {
   const apiClient = await getApiClient();
@@ -68,4 +74,5 @@ export default {
   getProductComments,
   createProductComment,
   registerProductClick,
+  getRecommendations,
 };

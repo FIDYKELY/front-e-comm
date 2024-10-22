@@ -48,14 +48,14 @@ export default {
           {
             breakpoint: 1024,
             settings: {
-              slidesToShow: 2,
+              slidesToShow: 2, // Afficher 2 produits pour les écrans moyens
               slidesToScroll: 1,
             },
           },
           {
             breakpoint: 600,
             settings: {
-              slidesToShow: 3,
+              slidesToShow: 1, // Afficher 1 produit pour les petits écrans
               slidesToScroll: 1,
             },
           },
@@ -65,11 +65,20 @@ export default {
   },
   async mounted() {
     try {
-      const response = await productService.getAllProducts();
-      this.products = response.data;
-      console.log('Nombre de produits récupérés :', this.products.length);
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('User ID is not available in localStorage');
+      }
+
+      const response = await productService.getRecommendations(userId);
+      const productIds = response.data.map(item => item.product_id);
+
+      const productsResponse = await Promise.all(productIds.map(id => productService.getProductById(id)));
+      this.products = productsResponse.map(res => res.data); // Assurez-vous que ça correspond à la structure de la réponse
+
+      console.log('Nombre de produits recommandés récupérés :', this.products.length);
     } catch (error) {
-      console.error('Erreur lors de la récupération des produits:', error);
+      console.error('Erreur lors de la récupération des recommandations:', error);
     }
   },
   methods: {
@@ -92,10 +101,36 @@ export default {
 </script>
 
 <style scoped>
-.product-card {
-  text-align: center;
-  padding: 10px;
+.vue-slick-carousel {
+  display: flex !important; /* Force le carrousel à utiliser flex */
+  justify-content: center; /* Centrer les éléments */
+  align-items: center; /* Centrer verticalement */
 }
+
+.product-carousel {
+  display: flex; /* Centrer horizontalement */
+  justify-content: center; /* Centrer le carrousel */
+  flex-wrap: nowrap; /* Évite que les éléments passent à la ligne */
+}
+
+.carousel-item {
+  display: flex; /* Utiliser flexbox pour chaque élément */
+  justify-content: center; /* Centrer le contenu de chaque produit */
+  align-items: center; /* Centrer verticalement */
+  min-width: 200px; /* Assurez-vous que les éléments ne rétrécissent pas trop */
+}
+
+.product-card {
+  flex: 0 0 auto; /* Évite que les cartes ne s'étirent */
+  width: 200px; /* Ajustez la largeur selon vos besoins */
+  margin: 0 10px; /* Espacement horizontal entre les cartes */
+  text-align: center; /* Centrer le texte dans les cartes */
+  padding: 10px; /* Espacement interne */
+  background: #fff; /* Fond blanc */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Ombre légère */
+  border-radius: 8px; /* Coins arrondis */
+}
+
 
 .product-image {
   width: 100%; /* Remplissage de la largeur du conteneur */
@@ -128,9 +163,5 @@ export default {
 
 .add-to-cart-btn:hover {
   background-color: #ff4500;
-}
-
-.product-carousel {
-  margin-top: 20px; /* Ajout d'un peu d'espace au-dessus du carrousel */
 }
 </style>

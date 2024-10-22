@@ -1,5 +1,5 @@
 <template>
-  <div :class="[ openModal ? 'fixed flex' : 'hidden', 'modal' ]">
+  <div :class="[openModal ? 'fixed flex' : 'hidden', 'modal']">
     <div class="modal-background"></div>
     <div class="modal-wrapper">
       <div class="bg-grey_light flex items-center justify-between rounded-t-2xl p-5">
@@ -11,21 +11,18 @@
         <div v-if="isPaymentSuccessful">
           <h2 class="text-2xl font-bold mb-4">Récapitulatif du paiement</h2>
           <div class="mb-4">
-            <p><strong>Montant payé :</strong> {{ successMessage.amount }} €</p>
             <p><strong>ID de paiement :</strong> {{ successMessage.id }}</p>
             <p><strong>Méthode de paiement :</strong> {{ successMessage.paymentMethod }}</p>
           </div>
-          <!-- Liste des produits achetés -->
           <div>
             <h3 class="text-xl font-bold mb-2">Produits achetés :</h3>
             <ul>
               <li v-for="product in products" :key="product.id" class="mb-2">
-                {{ product.title }} - Quantité : {{ product.quantity }} - Prix unitaire : {{ product.price }} €
+                {{ product.title }} - Quantité : {{ product.quantity }} - Prix unitaire : {{ product.price }} Ar
               </li>
             </ul>
-            <p><strong>Total :</strong> {{ calculateTotalAmount() / 100 }} €</p>
+            <p><strong>Total :</strong> {{ totalAmount }} Ar</p>
           </div>
-          <!-- Suivi de livraison -->
           <div class="mt-5">
             <h3 class="text-xl font-bold mb-2">Suivi de livraison :</h3>
             <p>Statut de la commande : {{ deliveryStatus }}</p>
@@ -37,7 +34,7 @@
           <div class="box" v-for="product in products" :key="product.id">
             <div>
               <p>{{ product.title }} {{ product.quantity > 0 ?  ` - Quantité : ${product.quantity}` : '' }}</p>
-              <p>{{ product.price }} &euro;</p>
+              <p>{{ product.price }} Ar</p>
             </div>
             <button class="rounded-xl p-3 text-white bg-red" @click="removeFromCart(product.id)">{{ removeLabel }}</button>
           </div>
@@ -46,20 +43,20 @@
           </div>
         </div>
 
-        <!-- Section de paiement avec Stripe -->
-        <div v-else>
+        <!-- Section de paiement avec Stripe, affichée uniquement si le paiement n'est pas réussi -->
+        <div v-else-if="isCheckoutSection && !isPaymentSuccessful">
           <div id="card-element"></div>
           <p v-if="error" class="text-red-500">{{ error }}</p>
-          <p v-if="successMessage">{{ successMessage }}</p>
+          <p v-if="successMessage && !isPaymentSuccessful" class="text-green-500">{{ successMessage }}</p>
         </div>
       </section>
 
       <div class="m-4">
         <button v-show="products.length > 0 && !isCheckoutSection" class="rounded-xl p-3 bg-blue text-white w-full" @click="onNextBtn">{{ buyLabel }}</button>
 
-        <button v-if="!isPaymentSuccessful && isCheckoutSection && products.length > 0" class="rounded-xl p-3 bg-green text-white w-full" @click="processOrder">
+        <!-- <button v-if="!isPaymentSuccessful && isCheckoutSection && products.length > 0" class="rounded-xl p-3 bg-green text-white w-full" @click="processOrder">
           Créer la commande
-        </button>
+        </button> -->
 
         <button v-if="isCheckoutSection && products.length > 0 && !isPaymentSuccessful" class="rounded-xl p-3 bg-blue text-white w-full" @click="processPayment">
           Payer maintenant
@@ -72,6 +69,8 @@
     </div>
   </div>
 </template>
+
+
 
 
 <script>
@@ -93,6 +92,7 @@ export default {
         longitude: null,
       },
       orderCreatedMessage: '',
+      totalAmount: 0,
       modalTitle: 'Checkout',
       removeLabel: 'Supprimer du panier',
       cartEmptyLabel: 'Panier vide',
@@ -117,7 +117,7 @@ export default {
       let totalProducts = this.products.length;
       let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
       let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
-      return `Achetez ${totalProducts} produit${totalProducts > 1 ? 's' : ''} pour ${finalPrice}€`;
+      return `Achetez ${totalProducts} produit${totalProducts > 1 ? 's' : ''} pour ${finalPrice} Ar`;
     },
     isUserLoggedIn() {
       return this.$store.getters.isUserLoggedIn;
@@ -230,11 +230,18 @@ export default {
 
         // Assignez l'ID de la commande ici
         this.currentOrderId = response.data.id;
-        this.showPaymentInterface(this.currentOrderId);
+
+        // Vider le panier après la validation du paiement
+        localStorage.removeItem('cart'); // Supprime l'élément 'cart' du localStorage
+        // ou utilisez la méthode suivante pour le vider :
+        // localStorage.setItem('cart', JSON.stringify([])); // Réinitialise le panier à un tableau vide
+
+        // this.showPaymentInterface(this.currentOrderId);
     } catch (error) {
         console.error('Erreur lors de la création de la commande:', error.response ? error.response.data : error.message);
     }
 },
+
 
 async getCoordinates(address, city, country) {
     const formattedAddress = `${address}, ${city}, ${country}`;
@@ -264,29 +271,35 @@ async getCoordinates(address, city, country) {
 
 async processPayment() {
     try {
+        // Calculer le montant total
         const amount = this.calculateTotalAmount();
 
+        // Créer le PaymentIntent avec l'API de paiement
         const response = await paymentApi.createPaymentIntent(amount);
         const clientSecret = response.data.clientSecret;
 
+        // Récupérer l'ID utilisateur depuis localStorage
         const userId = localStorage.getItem('userId');
         if (!userId) {
             throw new Error("User ID not found in localStorage");
         }
 
+        // Confirmer le paiement avec Stripe
         const { paymentIntent, error } = await this.stripe.confirmCardPayment(clientSecret, {
             payment_method: {
                 card: this.cardElement,
-                billing_details: {},
+                billing_details: {}, // Tu peux ajouter les détails de facturation ici
             },
         });
 
+        // Vérifier s'il y a eu une erreur lors de la confirmation du paiement
         if (error) {
             console.error("Erreur lors de la confirmation du paiement :", error);
             this.error = "Le paiement a échoué. Veuillez réessayer.";
             return;
         }
 
+        // Préparer les données de paiement à stocker
         const paymentData = {
             paymentId: paymentIntent.id,
             userId: userId,
@@ -299,6 +312,7 @@ async processPayment() {
             })),
         };
 
+        // Stocker les détails de paiement dans la base de données
         await paymentApi.storePaymentDetails(paymentData);
 
         // Vérifiez si currentOrderId est défini
@@ -308,13 +322,16 @@ async processPayment() {
             return;
         }
 
+        // Assigner la livraison
         const deliveryResponse = await deliveryApi.assignDelivery(this.currentOrderId);
-
         if (deliveryResponse.status !== 200) {
             throw new Error("Erreur lors de l'assignation du livreur");
         }
 
+        // Afficher le récapitulatif du paiement
         this.showPaymentSummary(paymentIntent);
+
+        // Mettre à jour l'état pour cacher l'input de la carte
         this.isPaymentSuccessful = true;
 
     } catch (error) {
@@ -326,7 +343,7 @@ async processPayment() {
 showPaymentSummary(paymentIntent) {
     this.successMessage = {
         id: paymentIntent.id,
-        amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en euros
+        amount: (paymentIntent.amount / 100).toFixed(2), // Convertir en unités monétaires
         paymentMethod: paymentIntent.payment_method,
     };
 },
@@ -334,8 +351,11 @@ showPaymentSummary(paymentIntent) {
 calculateTotalAmount() {
     let pricesArray = this.products.map(product => product.price * (product.quantity || 1));
     let finalPrice = pricesArray.reduce((a, b) => a + b, 0);
+    this.totalAmount = finalPrice; // Mettez à jour totalAmount
     return finalPrice * 100; // Stripe attend les montants en centimes
 },
+
+
   },
 };
 </script>
